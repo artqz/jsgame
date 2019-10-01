@@ -1,14 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Map } from 'immutable';
+import { Player } from './components/Player';
 
 function App() {
-  const [count, setCount] = useState(() =>
+  const [gameState, setgameState] = useState(() =>
     Map({
       playerDirection: 1,
       playerX: 2,
       playerY: 40,
+      playerRotate: 0,
       playerWidth: 16,
       playerHeight: 16,
+      PlayerFrameType: 'idle',
+      PlayerFrameRect: 0,
       messgae: ''
     })
   );
@@ -37,10 +41,19 @@ function App() {
         console.log('прыжок');
       }
 
-      setCount(pCount =>
-        pCount.update('playerX', value =>
-          move ? value + deltaTime * 0.15 * move : value
-        )
+      setgameState(pgameState =>
+        pgameState
+          .update('playerX', value =>
+            move ? value + deltaTime * 0.15 * move : value
+          )
+          .update('playerRotate', value =>
+            move ? (value + deltaTime * 0.4 * move) % 360 : value
+          )
+          .update('playerFrameType', () => (move ? 'walk' : 'idle'))
+          .update('playerFrameRect', value =>
+            move ? (value + deltaTime * 0.006) % 2 : 0
+          )
+          .update('playerDirection', value => (move ? move : value))
       );
     }
     previousTimeRef.current = time;
@@ -61,17 +74,25 @@ function App() {
         overflow: 'hidden'
       }}
     >
-      {count.get('playerX')}
-      <div
+      {Math.round(gameState.get('playerFrameRect'))}
+      {/* <div
         style={{
           position: 'absolute',
           width: 16 + 'px',
           height: 16 + 'px',
           backgroundColor: 'red',
-          top: count.get('playerY'),
-          left: count.get('playerX')
+          top: gameState.get('playerY'),
+          left: gameState.get('playerX'),
+          transform: 'rotate(' + gameState.get('playerRotate') + 'deg)'
         }}
-      ></div>
+      ></div> */}
+      <Player
+        playerX={gameState.get('playerX')}
+        playerY={gameState.get('playerY')}
+        playerFrameType={gameState.get('playerFrameType')}
+        playerFrameRect={Math.round(gameState.get('playerFrameRect'))}
+        playerDirection={gameState.get('playerDirection')}
+      />
     </div>
   );
 }
