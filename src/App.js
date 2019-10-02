@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Map } from 'immutable';
 import { Player } from './components/Player';
+import { Block } from './components/Block';
+
+const screenWidth = 500;
+const screenHeight = 300;
 
 function App() {
   const [gameState, setgameState] = useState(() =>
@@ -8,6 +12,8 @@ function App() {
       playerDirection: 1,
       playerX: 2,
       playerY: 40,
+      dx: 0,
+      dy: 0,
       playerRotate: 0,
       playerWidth: 16,
       playerHeight: 16,
@@ -16,8 +22,8 @@ function App() {
       messgae: ''
     })
   );
-  const requestRef = React.useRef();
-  const previousTimeRef = React.useRef();
+  const requestRef = useRef();
+  const previousTimeRef = useRef();
 
   // Слушаем и записываем нажатые клавиши
   let buttons = new Set();
@@ -60,7 +66,7 @@ function App() {
     requestRef.current = requestAnimationFrame(update);
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     requestRef.current = requestAnimationFrame(update);
     return () => cancelAnimationFrame(requestRef.current);
   }, []);
@@ -75,17 +81,8 @@ function App() {
       }}
     >
       {Math.round(gameState.get('playerFrameRect'))}
-      {/* <div
-        style={{
-          position: 'absolute',
-          width: 16 + 'px',
-          height: 16 + 'px',
-          backgroundColor: 'red',
-          top: gameState.get('playerY'),
-          left: gameState.get('playerX'),
-          transform: 'rotate(' + gameState.get('playerRotate') + 'deg)'
-        }}
-      ></div> */}
+
+      <Block blockX={200} blockY={40} blockType={1} />
       <Player
         playerX={gameState.get('playerX')}
         playerY={gameState.get('playerY')}
