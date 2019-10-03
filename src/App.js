@@ -3,6 +3,8 @@ import { Map } from 'immutable';
 import { Player } from './components/Player';
 import { Block } from './components/Block';
 import { levelGrid, levelWidth, levelHeight } from './components/level';
+import { cameraCoordinator } from './lib/camera';
+import { playerMove, playerJump } from './lib/player';
 
 const gameWidth = levelWidth;
 const gameHeight = levelHeight;
@@ -17,19 +19,17 @@ function App() {
       playerDirection: 1,
       playerX: 2,
       playerY: 192,
-      dx: 0,
-      dy: 0,
       playerRotate: 0,
       playerWidth: 16,
       playerHeight: 16,
       PlayerFrameType: 'idle',
       PlayerFrameRect: 0,
+      playerIsAir: false,
       messgae: ''
     })
   );
   const requestRef = useRef();
   const previousTimeRef = useRef();
-  // const update = useRef();
 
   useEffect(() => {
     //загружаем уровень
@@ -43,7 +43,7 @@ function App() {
       if (previousTimeRef.current !== undefined) {
         const deltaTime = time - previousTimeRef.current;
         let move = 0;
-        let top = 4;
+        let jump = 0;
         let tick = 1;
         let message = '';
 
@@ -52,36 +52,59 @@ function App() {
         } else if (buttons.has(39)) {
           move = 1;
         } else if (buttons.has(32)) {
+          jump = 1;
         }
 
-        setgameState(pgameState =>
-          pgameState
-            // .update('playerX', value =>
-            //   move ? value + deltaTime * 0.15 * move : value
-            // )
+        setgameState(newGameState =>
+          newGameState
             .update('playerX', value => {
-              if (pgameState.get('playerX') < gameWidth / 2) {
-                if (move) {
-                  return value + deltaTime * 0.15 * move;
-                } else return value;
-              } else return value;
+              return playerMove(
+                newGameState.get('playerX'),
+                newGameState.get('playerWidth'),
+                newGameState.get('cameraX'),
+                newGameState.get('cameraWidth'),
+                levelWidth,
+                value,
+                deltaTime,
+                move
+              );
             })
-            .update('cameraX', value => {
-              if (
-                pgameState.get('cameraX') <= 0 &&
-                pgameState.get('playerX') <= 0
-              ) {
-                return value;
-              }
-              if (pgameState.get('cameraX')) {
-              }
-              console.log();
+            .update('playerY', value => {
+              if (jump && !newGameState.get('playerIsAir')) {
+                console.log(deltaTime);
 
+                return value - deltaTime * 0.07;
+              }
+              if (newGameState.get('playerY') <= 192) {
+                return value + deltaTime * 0.1;
+              }
               return value;
             })
-            .update('playerRotate', value =>
-              move ? (value + deltaTime * 0.4 * move) % 360 : value
-            )
+            .update('playerIsAir', value => {
+              if (jump) {
+                return true;
+              }
+
+              return false;
+            })
+            .update('cameraY', () => {
+              return cameraCoordinator(
+                newGameState.get('cameraY'),
+                newGameState.get('cameraHeight'),
+                newGameState.get('playerY'),
+                newGameState.get('playerHeight'),
+                levelHeight
+              );
+            })
+            .update('cameraX', () => {
+              return cameraCoordinator(
+                newGameState.get('cameraX'),
+                newGameState.get('cameraWidth'),
+                newGameState.get('playerX'),
+                newGameState.get('playerWidth'),
+                levelWidth
+              );
+            })
             .update('playerFrameType', () => (move ? 'walk' : 'idle'))
             .update('playerFrameRect', value =>
               move ? (value + deltaTime * 0.006) % 2 : 0
@@ -115,9 +138,11 @@ function App() {
         overflow: 'hidden'
       }}
     >
-      {Math.round(gameState.get('playerFrameRect'))}
+      {gameState.get('playerIsAir') ? 'letim' : 'na zemle'}
 
       <Block blockX={200} blockY={40} blockType={1} />
+
+      {/* {renderLevel} */}
       <div
         id="camera"
         style={{
@@ -128,9 +153,7 @@ function App() {
           width: gameState.get('cameraWidth'),
           height: gameState.get('cameraHeight')
         }}
-      >
-        {renderLevel}
-      </div>
+      ></div>
       <Player
         playerX={gameState.get('playerX')}
         playerY={gameState.get('playerY')}
