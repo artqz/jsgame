@@ -557,15 +557,19 @@ const level = [
 ];
 
 // Генератор уровней
-let grid = [];
+let levelGrid = [];
 let id = 0;
 let type;
+let levelWidth = 0;
+let levelHeight = 0;
 
 level.forEach((row, i) => {
+  levelHeight = (i + 1) * 16;
   row.forEach((cell, j) => {
+    levelWidth = (j + 1) * 16;
     type = cell;
-    grid[id++] = { width: 16, height: 16, x: j * 16, y: i * 16, type };
+    levelGrid[id++] = { width: 16, height: 16, x: j * 16, y: i * 16, type };
   });
 });
 
-export { grid };
+export { levelGrid, levelWidth, levelHeight };

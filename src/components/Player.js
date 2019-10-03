@@ -8,8 +8,6 @@ export function Player({
   playerFrameRect,
   playerDirection
 }) {
-  console.log(playerFrameType + '_' + playerFrameRect);
-
   let rect;
   const style = {
     position: 'absolute',
